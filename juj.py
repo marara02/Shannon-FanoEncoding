@@ -1,14 +1,12 @@
+# Marzhan's part
 class Characters:
     def __init__(self, char, freq) -> None:
         self._char = char
         self._freq = freq
         self._code = ""
 
-    def __lt__(self, other):
+    def __lt__(self, other):  # method for sorting
         return True if self._freq < other.get_freq() else False
-
-    def __eq__(self, other):
-        return True if self._char == other.get_char() and self._freq == other.get_freq() else False
 
     def __str__(self):
         return "{0}\t {1}\t {2}".format(self._char, str(self._freq), self._code)
@@ -29,16 +27,16 @@ class Characters:
         self._code += str(code)
 
 
-# Dividing to left and right, first getting half, then compare difference between left and right for subdivision
+# Dividing to left and right, merging Shannon pathways
 def DivideList(lst):
     if len(lst) == 1:
         return None
     s = k = b = 0
     for p in lst:
-        s += p.get_freq()
+        s += p.get_freq()  # Counting frequency for each character
     s /= 2
     for p in range(len(lst)):
-        k += lst[p].get_freq()
+        k += lst[p].get_freq()  # s half of all counted freq, compare it with other parts
         if k == s:
             return p
         elif k > s:
@@ -50,17 +48,29 @@ def DivideList(lst):
     return
 
 
+# Zhanel's part
 # Assigning 0 and 1 to divided groups
 def Shannon_fano_code(lst):
     middle = DivideList(lst)
     if middle is None:
         return
-    for i in lst[: middle + 1]:
+    for i in lst[: middle + 1]:  # assign freq for left, by sides until divided middle
         i.append_code(0)
     Shannon_fano_code(lst[: middle + 1])
     for i in lst[middle + 1:]:
         i.append_code(1)
     Shannon_fano_code(lst[middle + 1:])
+
+
+# Decoding encoded bits to file
+def ShannonDecode(dictionary, text):
+    res = ""
+    while text:
+        for k in dictionary:
+            if text.startswith(k):
+                res += dictionary[k]
+                text = text[len(k):]
+    return res
 
 
 # sorting probability in descending order
@@ -77,6 +87,7 @@ def get_all(probabilities):
     return lst
 
 
+# Aruzhan's part
 if __name__ == "__main__":
     """Open file read text, count frequency, calculate probability"""
     f = open('hah.txt', 'r')
@@ -85,6 +96,11 @@ if __name__ == "__main__":
 
     all_freq = {}
     lists = []
+    r = ""  # encoded
+    # decoded
+    code = []
+    char = []
+
     for i in test_str:
         all_freq[i] = test_str.count(i)
     for key, value in all_freq.items():
@@ -98,14 +114,26 @@ if __name__ == "__main__":
     all = get_all(result)
 
     all.sort(reverse=True)
+    encoded_data = []
     Shannon_fano_code(all)
     for c in all:
+        encoded_data.append(c)
         print(c)
-
-    r = ""
+    # Getting encoded format of txt
     for u in test_str:
         for n in all:
             if u == n.get_char():
                 r += str(n.get_code())
+    # Create dictionary by adding code and characters
+    for k in all:
+        code.append(k.get_code())
+        char.append(k.get_char())
+    # print(code)
+    # print(char)
 
     print("Encoded message: \n", r)
+    # call decoding method and write decoded test to txt file
+    dictionary = dict(zip(code, char))
+    decodedFile = open("turned.txt", "w+")
+    decodedFile.write(ShannonDecode(dictionary, r))
+    decodedFile.close()
